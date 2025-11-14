@@ -23,18 +23,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 /* ============================================================
-   CORS (REQUIRED FOR RENDER DEPLOYMENT)
+   CORS (REQUIRED FOR RENDER + VERCEL)
 ============================================================ */
+const allowedOrigins = [
+  "https://sales-inventory-management-vbqo-5xddtfano.vercel.app", // your Vercel frontend
+  "http://localhost:5173", // optional dev frontend
+];
 app.use(
   cors({
-    origin: [
-      "https://sales-inventory-management-vbqo.vercel.app", // your Vercel frontend
-      "http://localhost:5173", // optional dev URL
-    ],
-    credentials: true, // allow cookies
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: allowedOrigins,
+    credentials: true, // important for cookies
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
+
+// Handle OPTIONS preflight
+app.options("*", cors({ origin: allowedOrigins, credentials: true }));
 
 /* ============================================================
    LOGGING MIDDLEWARE
