@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import bcrypt from "bcrypt";
 import { ZodError } from "zod";
-import { storage } from "./storage.js"; // keep .js for ESM
+import { storage } from "./storage.js"; // keep .js for Vercel/ESM
 import { loginSchema, registerSchema } from "../shared/schema.js";
 
 // Register routes for an Express app
@@ -85,7 +85,69 @@ export function registerRoutes(app: Express) {
     res.json({ message: "Logged out successfully" });
   });
 
-  /* -------------------- PRODUCT ROUTES -------------------- */
+  /* -------------------- ADMIN ROUTES -------------------- */
+
+  // Reset password
+  app.post("/api/admin/reset-password", async (req, res) => {
+    try {
+      const sessionId = req.cookies.sessionId;
+      if (!sessionId) return res.status(401).json({ message: "Unauthorized" });
+
+      const session = await storage.getSession(sessionId);
+      if (!session) return res.status(401).json({ message: "Invalid session" });
+
+      const adminUser = await storage.getUser(session.userId);
+      if (!adminUser || adminUser.role.toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { username, newPassword } = req.body;
+      if (!username || !newPassword) {
+        return res.status(400).json({ message: "Username and newPassword required" });
+      }
+
+      const staff = await storage.getUserByUsername(username);
+      if (!staff) return res.status(404).json({ message: "User not found" });
+
+      const hashed = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(username, hashed);
+
+      res.json({ message: `Password reset for ${username}` });
+    } catch (err) {
+      console.error("Admin reset error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.get("/api/admin/accounts", async (req, res) => {
+    try {
+      const sessionId = req.cookies.sessionId;
+      if (!sessionId) return res.status(401).json({ message: "Unauthorized" });
+
+      const session = await storage.getSession(sessionId);
+      if (!session) return res.status(401).json({ message: "Invalid session" });
+
+      const adminUser = await storage.getUser(session.userId);
+      if (!adminUser || adminUser.role.toLowerCase() !== "admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const allUsers = await storage.getAllUsers();
+      const sanitized = allUsers
+        .filter(u => ["staff", "supplier"].includes(u.role.toLowerCase()))
+        .map(({ password, ...rest }) => rest);
+
+      res.json(sanitized);
+    } catch (err) {
+      console.error("Admin view accounts error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  /* -------------------- PRODUCT, SALES, REPORT ROUTES -------------------- */
+  // Keep all other routes as-is (products, sales, stock deduction, reports)
+
+   // PRODCUT ROUTES
 
   app.get("/api/products", async (_req, res) => {
     try {
@@ -142,6 +204,98 @@ export function registerRoutes(app: Express) {
     } catch (err) {
       console.error("Delete product error:", err);
       res.status(500).json({ message: "Failed to delete product" });
+    }
+  });
+
+  //  Deduct stock
+  app.post("/api/products/:id/deduct", async (req, res) => {
+    try {
+      const { quantity } = req.body;
+      const productId = req.params.id;
+
+      const product =
+        (await storage.getProductByManualId(productId)) ||
+        (await storage.getProduct(productId));
+
+      if (!product) return res.status(404).json({ message: "Product not found" });
+      if (product.quantity < quantity)
+        return res.status(400).json({ message: "Insufficient stock" });
+
+      await storage.deductProductStock(product.id, quantity);
+      const updated = await storage.getProduct(product.id);
+
+      res.json({
+        message: `Deducted ${quantity} item(s) and recorded sale.`,
+        product: updated,
+      });
+    } catch (err) {
+      console.error("Stock deduction error:", err);
+      res.status(500).json({ message: "Failed to deduct stock" });
+    }
+  });
+
+  // SALES ROUTES
+  app.post("/api/sales", async (req, res) => {
+    try {
+      const { items } = req.body;
+      if (!Array.isArray(items) || items.length === 0)
+        return res.status(400).json({ message: "No sale items provided" });
+
+      let totalAmount = 0;
+      const saleRecords = [];
+
+      for (const item of items) {
+        const product =
+          (await storage.getProductByManualId(item.id)) || (await storage.getProduct(item.id));
+
+        if (!product)
+          return res.status(404).json({ message: `Product not found: ${item.id}` });
+        if (product.quantity < item.quantity)
+          return res.status(400).json({
+            message: `Insufficient stock for product ${product.name}`,
+          });
+
+        await storage.deductProductStock(product.id, item.quantity);
+        totalAmount += product.price * item.quantity;
+
+        saleRecords.push({
+          productId: product.id,
+          productName: product.name,
+          quantitySold: item.quantity,
+          totalPrice: product.price * item.quantity,
+        });
+      }
+
+      res.json({
+        message: "Transaction completed successfully.",
+        totalAmount,
+        saleRecords,
+      });
+    } catch (err) {
+      console.error("Sale transaction error:", err);
+      res.status(500).json({ message: "Failed to complete sale" });
+    }
+  });
+
+  app.get("/api/sales", async (_req, res) => {
+    try {
+      const sales = await storage.getSalesReport("daily");
+      res.json(sales);
+    } catch (err) {
+      console.error("Fetch sales error:", err);
+      res.status(500).json({ message: "Failed to fetch sales" });
+    }
+  });
+
+  // REPORT
+  app.get("/api/reports/:period", async (req, res) => {
+    try {
+      const period = req.params.period === "weekly" ? "weekly" : "daily";
+      const report = await storage.getSalesReport(period);
+      res.json(report);
+    } catch (err) {
+      console.error("Fetch report error:", err);
+      res.status(500).json({ message: "Failed to generate report" });
     }
   });
 }

@@ -7,12 +7,11 @@ dotenv.config();
 import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
 
-const BASE_API_URL = "https://sales-inventory-management.onrender.com";
-
 /* ============================================================
    APP INITIALIZATION
 ============================================================ */
 const app = express();
+
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -55,10 +54,9 @@ let isConnected = false;
 
 async function connectDB() {
   if (isConnected) return;
+
   try {
-    const uri =
-      process.env.MONGO_URI ||
-      "mongodb+srv://mdaviddd:mdaviddd123@cluster0.th1nuox.mongodb.net/sales-inventory-management?retryWrites=true&w=majority";
+    const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/loginDB";
     mongoose.set("strictQuery", true);
     await mongoose.connect(uri);
     log("✅ MongoDB connected");
@@ -78,13 +76,16 @@ await registerRoutes(app);
    FRONTEND SETUP
 ============================================================ */
 let frontendReady = false;
+
 async function setupFrontend() {
   if (frontendReady) return;
+
   if (process.env.NODE_ENV === "development") {
     await setupVite(app);
   } else {
     serveStatic(app);
   }
+
   frontendReady = true;
 }
 
@@ -116,13 +117,15 @@ export default async function handler(req: Request, res: Response) {
 ============================================================ */
 if (!process.env.VERCEL) {
   const port = process.env.PORT || 3000;
+
+  // startup wrapper to avoid top-level await in older hosts
   (async () => {
     try {
       await connectDB();
       await setupFrontend();
+
       app.listen(port, () => {
         console.log(`🚀 Server running on port ${port}`);
-        console.log(`🌐 Using backend API: ${BASE_API_URL}`);
       });
     } catch (err) {
       console.error("🔥 Failed to start server:", err);
