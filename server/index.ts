@@ -1,12 +1,11 @@
-// server/index.ts
 import express, { type Request, type Response, type NextFunction } from "express";
 import cookieParser from "cookie-parser";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
 
+import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
-
-const BASE_API_URL = "https://sales-inventory-management.onrender.com"; // Render backend
 
 /* ============================================================
    APP INITIALIZATION
@@ -49,6 +48,31 @@ app.use((req, res, next) => {
 });
 
 /* ============================================================
+   MONGODB CONNECTION
+============================================================ */
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
+
+  try {
+    const uri = process.env.MONGO_URI || "mongodb+srv://mdaviddd:mdaviddd123@cluster0.th1nuox.mongodb.net/sales-inventory-management?retryWrites=true&w=majority";
+    mongoose.set("strictQuery", true);
+    await mongoose.connect(uri);
+    log("✅ MongoDB connected");
+    isConnected = true;
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    throw new Error("Database connection failed");
+  }
+}
+
+/* ============================================================
+   API ROUTES
+============================================================ */
+await registerRoutes(app);
+
+/* ============================================================
    FRONTEND SETUP
 ============================================================ */
 let frontendReady = false;
@@ -75,57 +99,37 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 /* ============================================================
-   PROXY ALL /api REQUESTS TO RENDER BACKEND
+   SERVERLESS HANDLER (Vercel ONLY)
 ============================================================ */
-
-app.use("/api", async (req: Request, res: Response) => {
+export default async function handler(req: Request, res: Response) {
   try {
-    const url = `${BASE_API_URL}${req.originalUrl}`;
-    const options: any = {
-      method: req.method,
-      headers: {
-        "Content-Type": req.headers["content-type"] || "application/json",
-        cookie: req.headers.cookie || "",
-      },
-    };
-
-    if (req.method !== "GET" && req.method !== "HEAD") {
-      options.body = JSON.stringify(req.body);
-    }
-
-    const backendRes = await fetch(url, options);
-    const data = await backendRes.text();
-
-    res.status(backendRes.status);
-
-    try {
-      // Try parsing JSON
-      res.json(JSON.parse(data));
-    } catch {
-      // If not JSON, just return text
-      res.send(data);
-    }
+    await connectDB();
+    await setupFrontend();
+    return app(req, res);
   } catch (err) {
-    console.error("💥 API proxy error:", err);
-    res.status(500).json({ message: "API proxy failed" });
+    console.error("💥 Serverless handler error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-});
+}
 
 /* ============================================================
-   SERVER STARTUP
+   NORMAL NODE SERVER (Render, Railway, Local)
 ============================================================ */
-const port = process.env.PORT || 3000;
+if (!process.env.VERCEL) {
+  const port = process.env.PORT || 3000;
 
-(async () => {
-  try {
-    await setupFrontend();
+  // startup wrapper to avoid top-level await in older hosts
+  (async () => {
+    try {
+      await connectDB();
+      await setupFrontend();
 
-    app.listen(port, () => {
-      console.log(`🚀 Frontend server running on port ${port}`);
-      console.log(`🌐 All /api requests are proxied to ${BASE_API_URL}`);
-    });
-  } catch (err) {
-    console.error("🔥 Failed to start server:", err);
-    process.exit(1);
-  }
-})();
+      app.listen(port, () => {
+        console.log(`🚀 Server running on port ${port}`);
+      });
+    } catch (err) {
+      console.error("🔥 Failed to start server:", err);
+      process.exit(1);
+    }
+  })();
+}
