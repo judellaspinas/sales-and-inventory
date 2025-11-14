@@ -28,7 +28,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "https://sales-inventory-management-f449.vercel.app", // your Vercel frontend
+      "https://sales-inventory-management-vbqo.vercel.app", // your Vercel frontend
       "http://localhost:5173", // optional dev URL
     ],
     credentials: true, // allow cookies
