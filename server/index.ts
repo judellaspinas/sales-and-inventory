@@ -28,10 +28,10 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: [
-      "https://sales-inventory-management.onrender.com",
-      "https://sales-inventory-management-u4dn.vercel.app", // replace with your real frontend URL
+      "https://sales-inventory-management-f449.vercel.app", // your Vercel frontend
+      "http://localhost:5173", // optional dev URL
     ],
-    credentials: true,
+    credentials: true, // allow cookies
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
