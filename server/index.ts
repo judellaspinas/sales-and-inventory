@@ -26,7 +26,7 @@ app.use(cookieParser());
    CORS (REQUIRED FOR RENDER + VERCEL)
 ============================================================ */
 const allowedOrigins = [
-  "https://sales-inventory-management-vbqo-5xddtfano.vercel.app", // your Vercel frontend
+  "https://sales-and-inventory-zeta.vercel.app/", // your Vercel frontend
   "http://localhost:5173", // optional dev frontend
 ];
 app.use(
