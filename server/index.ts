@@ -15,7 +15,7 @@ import { setupVite, serveStatic, log } from './vite.js';
 /* ============================================================
    DEPLOYED BACKEND URL (Render)
 ============================================================ */
-export const BASE_API_URL = 'https://sales-inventory-management.onrender.com';
+export const BASE_API_URL = 'https://sales-and-inventory-1.onrender.com';
 
 /* ============================================================
    APP INITIALIZATION
