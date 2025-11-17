@@ -22,6 +22,7 @@ interface RegisterData {
   role: string;
   supply?: string;
   supplyQuantity?: number;
+   supplyCompany?: string;
 }
 
 export default function Register() {
@@ -265,45 +266,60 @@ export default function Register() {
                 </Select>
               </div>
 
-              {formData.role === "supplier" && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="supply" className="text-foreground font-medium text-sm ">
-                        Supply Type
-                      </Label>
-                      <Input
-                        id="supply"
-                        type="text"
-                        placeholder="What do you supply?"
-                        value={formData.supply || ""}
-                        onChange={(e) => handleInputChange("supply", e.target.value)}
-                        data-testid="input-supply"
-                        className="h-10 transition-all duration-200"
-                      />
-                    </div>
+             {formData.role === "supplier" && (
+  <div className="space-y-4">
+    <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="companyName" className="text-foreground font-medium text-sm">
+          Company Name
+        </Label>
+        <Input
+          id="companyName"
+          type="text"
+          placeholder="Enter your company name"
+          value={formData.supplyCompany || ""} // We'll add supplyCompany to formData
+          onChange={(e) => handleInputChange("supplyCompany", e.target.value)}
+          data-testid="input-companyName"
+          className="h-10 transition-all duration-200"
+        />
+      </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="supplyQuantity" className="text-foreground font-medium text-sm">
-                        Quantity
-                      </Label>
-                      <Input
-                        id="supplyQuantity"
-                        type="number"
-                        min="1"
-                        placeholder="Supply quantity"
-                        value={formData.supplyQuantity !== undefined ? String(formData.supplyQuantity) : ""}
-                        onChange={(e) => {
-                          const raw = e.target.value;
-                          handleInputChange("supplyQuantity", raw === "" ? undefined : Number(raw));
-                        }}
-                        data-testid="input-supplyQuantity"
-                        className="h-10 transition-all duration-200"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+      <div className="space-y-2">
+        <Label htmlFor="supply" className="text-foreground font-medium text-sm">
+          Supply Type
+        </Label>
+        <Input
+          id="supply"
+          type="text"
+          placeholder="What do you supply?"
+          value={formData.supply || ""}
+          onChange={(e) => handleInputChange("supply", e.target.value)}
+          data-testid="input-supply"
+          className="h-10 transition-all duration-200"
+        />
+      </div>
+    </div>
+
+    <div className="space-y-2">
+      <Label htmlFor="supplyQuantity" className="text-foreground font-medium text-sm">
+        Quantity
+      </Label>
+      <Input
+        id="supplyQuantity"
+        type="number"
+        min="1"
+        placeholder="Supply quantity"
+        value={formData.supplyQuantity !== undefined ? String(formData.supplyQuantity) : ""}
+        onChange={(e) => {
+          const raw = e.target.value;
+          handleInputChange("supplyQuantity", raw === "" ? undefined : Number(raw));
+        }}
+        data-testid="input-supplyQuantity"
+        className="h-10 transition-all duration-200"
+      />
+    </div>
+  </div>
+)}
 
               <Button
                 type="submit"

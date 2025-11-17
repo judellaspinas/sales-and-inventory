@@ -186,127 +186,134 @@ export default function Products() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Product Inventory
-            </h1>
-            <p className="text-muted-foreground">
-              Manage your product inventory and stock levels
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {canManageProducts && (
-              <Button onClick={() => setShowAddDialog(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Product
-              </Button>
-            )}
-            {/* ✅ Fixed nested <a> issue */}
-            <Button asChild variant="outline">
-              <Link href="/dashboard">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Category Filter */}
-        <div className="flex gap-2 items-center mb-4">
-          <span className="font-medium">Filter by Category:</span>
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="All Categories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="Hand Tools">Hand Tools</SelectItem>
-              <SelectItem value="Power Tools">Power Tools</SelectItem>
-              <SelectItem value="Fasteners & Fittings">
-                Fasteners & Fittings
-              </SelectItem>
-              <SelectItem value="Electrical Supplies">
-                Electrical Supplies
-              </SelectItem>
-              <SelectItem value="Plumbing Supplies">
-                Plumbing Supplies
-              </SelectItem>
-              <SelectItem value="Construction Materials">
-                Construction Materials
-              </SelectItem>
-              <SelectItem value="Safety Gear">Safety Gear</SelectItem>
-              <SelectItem value="Cleaning & Maintenance">
-                Cleaning & Maintenance
-              </SelectItem>
-              <SelectItem value="Outdoor & Garden">
-                Outdoor & Garden
-              </SelectItem>
-              <SelectItem value="Automotive & Industrial">
-                Automotive & Industrial
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Product Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
-              Product Inventory
-              <Badge variant="secondary" className="ml-auto">
-                {filteredProducts.length} products
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">Loading products...</div>
-            ) : error ? (
-              <div className="text-center text-red-500 py-8">
-                Failed to load products.
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No products found.
-              </div>
-            ) : (
-              <DataTable columns={columns} data={filteredProducts} />
-            )}
-          </CardContent>
-        </Card>
+  <div className="container mx-auto p-4 sm:p-6 space-y-6">
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Product Inventory
+        </h1>
+        <p className="text-muted-foreground">
+          Manage your product inventory and stock levels
+        </p>
       </div>
-
-      {/* Dialogs */}
-      <AddProductDialog
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-      />
-
-      {selectedProduct && (
-        <EditProductDialog
-          open={showEditDialog}
-          onClose={() => {
-            setShowEditDialog(false);
-            setSelectedProduct(null);
-          }}
-          product={selectedProduct}
-        />
-      )}
-
-      {selectedProduct && (
-        <PlaceOrderDialog
-          open={showOrderDialog}
-          onClose={() => {
-            setShowOrderDialog(false);
-            setSelectedProduct(null);
-          }}
-          product={selectedProduct}
-        />
-      )}
+      <div className="flex flex-col sm:flex-row gap-2">
+        {canManageProducts && (
+          <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        )}
+        <Button asChild variant="outline" className="w-full sm:w-auto">
+          <Link href="/dashboard">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
     </div>
+
+    {/* Category Filter */}
+    <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+      <span className="font-medium">Filter by Category:</span>
+      <Select value={filterCategory} onValueChange={setFilterCategory}>
+        <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectValue placeholder="All Categories" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All</SelectItem>
+          <SelectItem value="Hand Tools">Hand Tools</SelectItem>
+          <SelectItem value="Power Tools">Power Tools</SelectItem>
+          <SelectItem value="Fasteners & Fittings">
+            Fasteners & Fittings
+          </SelectItem>
+          <SelectItem value="Electrical Supplies">
+            Electrical Supplies
+          </SelectItem>
+          <SelectItem value="Plumbing Supplies">
+            Plumbing Supplies
+          </SelectItem>
+          <SelectItem value="Construction Materials">
+            Construction Materials
+          </SelectItem>
+          <SelectItem value="Safety Gear">Safety Gear</SelectItem>
+          <SelectItem value="Cleaning & Maintenance">
+            Cleaning & Maintenance
+          </SelectItem>
+          <SelectItem value="Outdoor & Garden">Outdoor & Garden</SelectItem>
+          <SelectItem value="Automotive & Industrial">
+            Automotive & Industrial
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    {/* Product List */}
+    {isLoading ? (
+      <div className="text-center py-8">Loading products...</div>
+    ) : error ? (
+      <div className="text-center text-red-500 py-8">
+        Failed to load products.
+      </div>
+    ) : filteredProducts.length === 0 ? (
+      <div className="text-center py-8 text-muted-foreground">
+        No products found.
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredProducts.map((product) => {
+          const q = product.quantity;
+          const status =
+            q <= 1 ? "critical" : q <= 5 ? "low" : "good";
+          const statusText =
+            q <= 1 ? "Critical" : q <= 5 ? "Running low" : "Good";
+
+          return (
+            <Card key={product.id} className="shadow-md">
+              <CardHeader className="flex justify-between items-start">
+                <CardTitle className="text-sm font-medium">{product.name}</CardTitle>
+                <Badge
+                  variant={
+                    status === "critical" || status === "low"
+                      ? "destructive"
+                      : "default"
+                  }
+                  className={status === "good" ? "border-green-500/20 text-green-500" : ""}
+                >
+                  {statusText}
+                </Badge>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <p>ID: <span className="font-mono">{product.id}</span></p>
+                <p>Category: <span className="font-medium">{product.category || "Uncategorized"}</span></p>
+                <p>Description: {product.description || "—"}</p>
+                <p>Price: ₱{product.price.toFixed(2)} {product.weighted ? "/ kilo" : ""}</p>
+                <p>Stock: {product.quantity}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {canPlaceOrders && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => handlePlaceOrder(product)}
+                      disabled={product.quantity === 0}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-1" />
+                      Order
+                    </Button>
+                  )}
+                  {canManageProducts && (
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</div>
   );
 }

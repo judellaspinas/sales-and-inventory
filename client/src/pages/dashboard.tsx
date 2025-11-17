@@ -14,6 +14,8 @@ import {
   ShoppingCart,
   Menu,
   LayoutDashboard,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 interface Stats {
@@ -27,12 +29,22 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false); // dark mode toggle
 
   useEffect(() => {
     if (!user) setLocation("/login");
   }, [user, setLocation]);
 
-  const { data: stats, isLoading } = useQuery<Stats>({ queryKey: ["/api/stats"], enabled: !!user });
+  useEffect(() => {
+    // Apply dark mode class to html root
+    if (darkMode) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+  }, [darkMode]);
+
+  const { data: stats, isLoading } = useQuery<Stats>({
+    queryKey: ["/api/stats"],
+    enabled: !!user,
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -53,23 +65,30 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors">
       {/* MOBILE HEADER */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-card border-b px-4 py-3 flex items-center justify-between z-40">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-card dark:bg-gray-800 border-b dark:border-gray-700 px-4 py-3 flex items-center justify-between z-40">
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
           <Menu className="w-6 h-6" />
         </Button>
         <h1 className="text-lg font-semibold">Dashboard</h1>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setDarkMode(!darkMode)}
+        >
+          {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </Button>
       </div>
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed lg:static top-0 left-0 h-full w-64 bg-card border-r shadow-md z-50 transform transition-transform duration-300
+        className={`fixed lg:static top-0 left-0 h-full w-64 bg-card dark:bg-gray-800 border-r dark:border-gray-700 shadow-md z-50 transform transition-transform duration-300
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        <div className="p-5 border-b">
+        <div className="p-5 border-b dark:border-gray-700">
           <h2 className="text-xl font-bold">BLCM</h2>
-          <p className="text-sm text-muted-foreground">Welcome, {user.firstName}</p>
+          <p className="text-sm text-muted-foreground dark:text-gray-400">Welcome, {user.firstName}</p>
         </div>
 
         <nav className="flex flex-col p-4 space-y-2">
@@ -108,6 +127,18 @@ export default function Dashboard() {
             <LogOut className="w-4 h-4 mr-2" /> Logout
           </Button>
         </nav>
+
+        {/* DARK MODE TOGGLE */}
+        <div className="mt-auto p-4">
+          <Button
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
+            onClick={() => setDarkMode(!darkMode)}
+          >
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {darkMode ? "Light Mode" : "Dark Mode"}
+          </Button>
+        </div>
       </aside>
 
       {/* OVERLAY FOR MOBILE */}
@@ -119,43 +150,53 @@ export default function Dashboard() {
       )}
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-6 mt-14 lg:mt-0">
-        <div className={`grid grid-cols-1 ${isAdminOrStaff ? "md:grid-cols-3" : "md:grid-cols-2"} gap-6 mb-8`}>
-          <Card>
+      <main className="flex-1 p-6 mt-14 lg:mt-0 transition-colors">
+        <div
+          className={`grid grid-cols-1 ${
+            isAdminOrStaff ? "md:grid-cols-3" : "md:grid-cols-2"
+          } gap-6 mb-8`}
+        >
+          <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <Package className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{isLoading ? "..." : stats?.totalProducts ?? 0}</div>
+              <div className="text-2xl font-bold">
+                {isLoading ? "..." : stats?.totalProducts ?? 0}
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <AlertTriangle className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">{isLoading ? "..." : stats?.lowStockItems ?? 0}</div>
+              <div className="text-2xl font-bold text-destructive">
+                {isLoading ? "..." : stats?.lowStockItems ?? 0}
+              </div>
             </CardContent>
           </Card>
 
           {isAdminOrStaff && (
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <DollarSign className="h-4 w-4 text-muted-foreground dark:text-gray-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{isLoading ? "..." : formatPeso(stats?.totalValue)}</div>
+                <div className="text-2xl font-bold">
+                  {isLoading ? "..." : formatPeso(stats?.totalValue)}
+                </div>
               </CardContent>
             </Card>
           )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Recent Activity</CardTitle>
             </CardHeader>
@@ -167,24 +208,35 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 border dark:border-gray-700">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Low Stock Alert</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="text-center text-muted-foreground">Loading...</div>
+                <div className="text-center text-muted-foreground dark:text-gray-400">
+                  Loading...
+                </div>
               ) : !stats?.lowStockProducts?.length ? (
-                <div className="text-center text-muted-foreground">No low stock items</div>
+                <div className="text-center text-muted-foreground dark:text-gray-400">
+                  No low stock items
+                </div>
               ) : (
                 <div className="space-y-4">
                   {stats.lowStockProducts.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between"
+                    >
                       <div>
                         <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">Only {item.quantity} left</p>
+                        <p className="text-sm text-muted-foreground dark:text-gray-400">
+                          Only {item.quantity} left
+                        </p>
                       </div>
-                      <Badge variant="destructive">{item.quantity <= 1 ? "Critical" : "Low"}</Badge>
+                      <Badge variant="destructive">
+                        {item.quantity <= 1 ? "Critical" : "Low"}
+                      </Badge>
                     </div>
                   ))}
                 </div>
