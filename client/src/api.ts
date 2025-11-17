@@ -1,7 +1,7 @@
 // src/api.ts
 
 // Use environment variable for production; fallback to localhost for dev
-export const BASE_API_URL =
+export const BASE_API_URL = "https://sales-and-inventory-1.onrender.com"
   import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Helper fetch wrapper for JSON + error handling
