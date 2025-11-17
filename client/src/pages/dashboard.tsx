@@ -87,7 +87,7 @@ export default function Dashboard() {
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         <div className="p-5 border-b dark:border-gray-700">
-          <h2 className="text-xl font-bold">BLCM</h2>
+          <h2 className="text-xl font-bold">BLCM DASHBOARD</h2>
           <p className="text-sm text-muted-foreground dark:text-gray-400">Welcome, {user.firstName}</p>
         </div>
 
